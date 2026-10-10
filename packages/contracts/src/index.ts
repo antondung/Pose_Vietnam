@@ -1,0 +1,973 @@
+import { z } from 'zod';
+
+// ==========================================
+// 1. Color and Garment Config Schemas
+// ==========================================
+
+export const ColorSchema = z.object({
+  hex: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Mã màu hex không hợp lệ'),
+  name: z.string().min(1, 'Tên màu không được để trống'),
+  family: z.enum(['red', 'blue', 'green', 'yellow', 'white', 'black', 'pink', 'purple', 'neutral', 'pastel']).default('neutral'),
+});
+export type Color = z.infer<typeof ColorSchema>;
+
+export const VALID_ACCESSORY_IDS = [
+  'man_truyen_thong',
+  'non_la',
+  'chuoi_ngoc',
+  'quat_xep',
+  'tui_coi',
+  'guoc_moc',
+] as const;
+export type AccessoryId = typeof VALID_ACCESSORY_IDS[number];
+export const AccessoryIdEnum = z.enum(VALID_ACCESSORY_IDS);
+
+export const AccessoryItemSchema = z.object({
+  id: AccessoryIdEnum,
+  name: z.string(),
+  category: z.enum(['headwear', 'jewelry', 'handheld', 'footwear', 'bag']),
+  description: z.string(),
+  culturalNote: z.string().optional(),
+});
+export type AccessoryItem = z.infer<typeof AccessoryItemSchema>;
+
+export const VALID_COLLARS = ['traditional_high', 'round', 'boat', 'v_neck'] as const;
+export const CollarStyleEnum = z.enum(VALID_COLLARS);
+export type CollarStyle = z.infer<typeof CollarStyleEnum>;
+
+export const VALID_SLEEVES = ['traditional_long', 'raglan', 'elbow', 'slit'] as const;
+export const SleeveStyleEnum = z.enum(VALID_SLEEVES);
+export type SleeveStyle = z.infer<typeof SleeveStyleEnum>;
+
+export const VALID_FABRICS = ['silk_ha_dong', 'brocade_hue', 'voile_chiffon', 'linen_modern'] as const;
+export const FabricEnum = z.enum(VALID_FABRICS);
+export type Fabric = z.infer<typeof FabricEnum>;
+
+export const VALID_PATTERNS = ['plain', 'lotus', 'cloud', 'crane', 'geometric_genz'] as const;
+export type Pattern = z.infer<typeof PatternEnum>;
+export const PatternEnum = z.enum(VALID_PATTERNS);
+
+export const VALID_BODY_SHAPES = [
+  'standard',
+  'petite',
+  'tall_slender',
+  'broad_shoulders',
+  'curvy_hips',
+  'plus_size',
+] as const;
+export type BodyShape = typeof VALID_BODY_SHAPES[number];
+export const BodyShapeEnum = z.enum(VALID_BODY_SHAPES);
+
+export const VALID_GARMENT_MODELS = [
+  'aodai_traditional_v2',
+  'aodai_classic_01',
+  'aodai_remix_raglan',
+] as const;
+export type GarmentModelId = typeof VALID_GARMENT_MODELS[number];
+export const GarmentModelIdEnum = z.enum(VALID_GARMENT_MODELS);
+
+// ==========================================
+// 1b. Independent Avatar Contract Schemas
+// ==========================================
+
+export const STANDARD_AVATAR_IDS = ['avatar_v2', 'avatar_base'] as const;
+export type StandardAvatarId = (typeof STANDARD_AVATAR_IDS)[number];
+export type AvatarId = StandardAvatarId | (string & {});
+
+export const AttachmentSocketSchema = z.object({
+  position: z.tuple([z.number(), z.number(), z.number()]),
+  rotation: z.tuple([z.number(), z.number(), z.number()]).optional(),
+  scale: z.tuple([z.number(), z.number(), z.number()]).optional(),
+  trackedFeature: z.string().optional(),
+});
+export type AttachmentSocket = z.infer<typeof AttachmentSocketSchema>;
+
+export const AvatarMaterialBindingSchema = z.object({
+  slot: z.string(),
+  type: z.enum(['skin', 'hair', 'eyes', 'static']),
+  defaultColor: z.string().optional(),
+  preserveTexture: z.boolean().default(true),
+});
+export type AvatarMaterialBinding = z.infer<typeof AvatarMaterialBindingSchema>;
+
+export const AvatarSpecSchema = z.object({
+  avatarId: z.string().min(1),
+  assetVersion: z.string().default('1.0.0'),
+  glbPath: z.string().min(1),
+  displayName: z.string().min(1),
+  category: z.enum(['adult_female', 'stylized_female']).default('adult_female'),
+  license: z.string().default('CC-BY-4.0'),
+  source: z.string().default('internal'),
+  author: z.string().optional(),
+  bounds: z.object({
+    min: z.tuple([z.number(), z.number(), z.number()]),
+    max: z.tuple([z.number(), z.number(), z.number()]),
+    height: z.number().positive(),
+  }),
+  materialBindings: z.record(AvatarMaterialBindingSchema).default({}),
+  supportedBodyPresets: z.array(BodyShapeEnum).default([...VALID_BODY_SHAPES]),
+  rigStatus: z.object({
+    isRigged: z.boolean().default(false),
+    skeletonType: z.string().optional(),
+    hasMorphTargets: z.boolean().default(true),
+  }),
+  sockets: z.record(AttachmentSocketSchema).default({}),
+  morphAliases: z.record(z.string()).optional(),
+  checksumSha256: z.string().optional(),
+  registeredAt: z.string().optional(),
+});
+export type AvatarSpec = z.infer<typeof AvatarSpecSchema>;
+
+export const CompatibilityStatusEnum = z.enum(['verified', 'untested', 'unsupported']);
+export type CompatibilityStatus = z.infer<typeof CompatibilityStatusEnum>;
+
+export const GarmentCompatibilitySchema = z.object({
+  avatarId: z.string(),
+  avatarVersion: z.string().default('1.0.0'),
+  garmentModelId: GarmentModelIdEnum,
+  garmentVersion: z.string().default('1.0.0'),
+  bodyShape: BodyShapeEnum,
+  status: CompatibilityStatusEnum.default('untested'),
+  reason: z.string().optional(),
+  verifiedAt: z.string().optional(),
+});
+export type GarmentCompatibilityRecord = z.infer<typeof GarmentCompatibilitySchema>;
+
+/**
+ * Backward compatibility fallback resolver:
+ * Maps legacy look / lookbook item lacking avatarId to its historically matching avatar asset.
+ */
+export function resolveAvatarForModel(modelId?: GarmentModelId, avatarId?: string): string {
+  if (avatarId && avatarId.trim() !== '') {
+    return avatarId;
+  }
+  if (modelId === 'aodai_traditional_v2') {
+    return 'avatar_v2';
+  }
+  return 'avatar_base';
+}
+
+/**
+ * Triplet compatibility evaluator:
+ * Evaluates compatibility status between (avatarId, garmentModelId, bodyShape).
+ */
+export function getCompatibilityStatus(
+  avatarId: string,
+  garmentModelId: GarmentModelId,
+  bodyShape: BodyShape = 'standard',
+  customMatrix?: GarmentCompatibilityRecord[]
+): { status: CompatibilityStatus; reason: string } {
+  if (Array.isArray(customMatrix)) {
+    const matched = customMatrix.find(
+      (m) => m.avatarId === avatarId && m.garmentModelId === garmentModelId && m.bodyShape === bodyShape
+    );
+    if (matched) {
+      return { status: matched.status, reason: matched.reason || '' };
+    }
+  }
+
+  // Built-in verified pairings
+  if (avatarId === 'avatar_v2' && garmentModelId === 'aodai_traditional_v2') {
+    return { status: 'verified', reason: 'Thiết kế đồng bộ chuẩn V2 (DCC Master)' };
+  }
+  if (avatarId === 'avatar_base' && (garmentModelId === 'aodai_classic_01' || garmentModelId === 'aodai_remix_raglan')) {
+    return { status: 'verified', reason: 'Thiết kế đồng bộ chuẩn V1 (Dáng Việt Studio)' };
+  }
+  if (avatarId === 'avatar_base' && garmentModelId === 'aodai_traditional_v2') {
+    return { status: 'unsupported', reason: 'Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn' };
+  }
+
+  return { status: 'untested', reason: 'Chưa qua kiểm thử tương thích trong phòng phối' };
+}
+
+export interface ModelCapability {
+  id: GarmentModelId;
+  name: string;
+  category: 'classic' | 'remix';
+  supportedCollars: readonly CollarStyle[];
+  supportedSleeves: readonly SleeveStyle[];
+  supportedFabrics: readonly Fabric[];
+  supportedPatterns: readonly Pattern[];
+  supportedAccessories: readonly AccessoryId[];
+  supportedBodyShapes: readonly BodyShape[];
+  incompatibleOptionMessages: Record<string, string>;
+}
+
+export const MODEL_CAPABILITIES: Record<GarmentModelId, ModelCapability> = {
+  aodai_traditional_v2: {
+    id: 'aodai_traditional_v2',
+    name: 'Áo Dài Cổ Cao 4.2cm Chuẩn V2 (DCC Master)',
+    category: 'classic',
+    supportedCollars: ['traditional_high'] as const,
+    supportedSleeves: ['traditional_long'] as const,
+    supportedFabrics: ['silk_ha_dong', 'brocade_hue', 'linen_modern', 'voile_chiffon'] as const,
+    supportedPatterns: ['plain', 'lotus', 'cloud', 'crane', 'geometric_genz'] as const,
+    supportedAccessories: ['man_truyen_thong', 'non_la', 'chuoi_ngoc', 'quat_xep', 'tui_coi', 'guoc_moc'] as const,
+    supportedBodyShapes: ['standard', 'petite', 'tall_slender', 'broad_shoulders', 'curvy_hips', 'plus_size'] as const,
+    incompatibleOptionMessages: {
+      round: 'Mẫu cổ cao 4.2cm truyền thống không hỗ trợ cổ tròn; hãy chuyển sang mẫu Remix Raglan để dùng cổ tròn.',
+      boat: 'Mẫu truyền thống chuẩn v2 chỉ dùng cổ đứng 4.2cm; chuyển sang Remix Raglan để dùng cổ thuyền.',
+      v_neck: 'Mẫu truyền thống chuẩn v2 không hỗ trợ cổ chữ V.',
+      raglan: 'Mẫu truyền thống dùng tay dài ráp vai; chuyển sang Remix Raglan để dùng tay raglan.',
+      elbow: 'Mẫu truyền thống chuẩn v2 giữ tay dài truyền thống trang nhã; chuyển sang Remix Raglan để dùng tay lửng.',
+      slit: 'Mẫu truyền thống chuẩn v2 không hỗ trợ tay xẻ.',
+      pattern_notice: 'Mẫu 3D v2 hiện kết xuất chất liệu trơn (PBR); hoa văn in đang được phát triển.',
+    },
+  },
+  aodai_remix_raglan: {
+    id: 'aodai_remix_raglan',
+    name: 'Áo Dài Cách Tân Tay Raglan',
+    category: 'remix',
+    supportedCollars: ['boat', 'round', 'v_neck'] as const,
+    supportedSleeves: ['raglan', 'elbow', 'slit'] as const,
+    supportedFabrics: ['silk_ha_dong', 'brocade_hue', 'linen_modern', 'voile_chiffon'] as const,
+    supportedPatterns: ['plain', 'lotus', 'cloud', 'crane', 'geometric_genz'] as const,
+    supportedAccessories: ['man_truyen_thong', 'non_la', 'chuoi_ngoc', 'quat_xep', 'tui_coi', 'guoc_moc'] as const,
+    supportedBodyShapes: ['standard', 'petite', 'tall_slender', 'broad_shoulders', 'curvy_hips', 'plus_size'] as const,
+    incompatibleOptionMessages: {
+      traditional_high: 'Mẫu Remix Raglan thiết kế cổ thoáng hiện đại; hãy chuyển sang Mẫu Chuẩn V2 để dùng cổ đứng 4.2cm.',
+      traditional_long: 'Mẫu Remix dùng tay raglan năng động; chuyển sang Mẫu Chuẩn V2 để dùng tay dài truyền thống.',
+    },
+  },
+  aodai_classic_01: {
+    id: 'aodai_classic_01',
+    name: 'Áo Dài Cổ Đứng Truyền Thống (Legacy v1)',
+    category: 'classic',
+    supportedCollars: ['traditional_high'] as const,
+    supportedSleeves: ['traditional_long'] as const,
+    supportedFabrics: ['silk_ha_dong', 'brocade_hue', 'linen_modern', 'voile_chiffon'] as const,
+    supportedPatterns: ['plain', 'lotus', 'cloud', 'crane', 'geometric_genz'] as const,
+    supportedAccessories: ['man_truyen_thong', 'non_la', 'chuoi_ngoc', 'quat_xep', 'tui_coi', 'guoc_moc'] as const,
+    supportedBodyShapes: ['standard', 'petite', 'tall_slender', 'broad_shoulders', 'curvy_hips', 'plus_size'] as const,
+    incompatibleOptionMessages: {
+      round: 'Mẫu cổ đứng truyền thống v1 không hỗ trợ cổ tròn.',
+      boat: 'Mẫu cổ đứng truyền thống v1 không hỗ trợ cổ thuyền.',
+      v_neck: 'Mẫu cổ đứng truyền thống v1 không hỗ trợ cổ chữ V.',
+      raglan: 'Mẫu cổ đứng truyền thống v1 dùng tay dài ráp vai.',
+      elbow: 'Mẫu cổ đứng truyền thống v1 không hỗ trợ tay lửng.',
+      slit: 'Mẫu cổ đứng truyền thống v1 không hỗ trợ tay xẻ.',
+    },
+  },
+};
+
+export function getModelCapability(modelId: GarmentModelId): ModelCapability {
+  return MODEL_CAPABILITIES[modelId] || MODEL_CAPABILITIES.aodai_traditional_v2;
+}
+
+export const COLLAR_LABELS: Record<CollarStyle, string> = {
+  traditional_high: 'Cổ cao truyền thống (4.2cm)',
+  round: 'Cổ tròn thanh thoát',
+  boat: 'Cổ thuyền kiêu sa',
+  v_neck: 'Cổ V cách tân',
+};
+
+export const SLEEVE_LABELS: Record<SleeveStyle, string> = {
+  traditional_long: 'Tay dài truyền thống',
+  raglan: 'Tay raglan kinh điển',
+  elbow: 'Tay lửng tươi trẻ',
+  slit: 'Tay xẻ cách điệu',
+};
+
+export const FABRIC_LABELS: Record<Fabric, string> = {
+  silk_ha_dong: 'Lụa Vạn Phúc - Hà Đông',
+  brocade_hue: 'Gấm hoa triều đình Huế',
+  voile_chiffon: 'Tơ voan bồng bềnh',
+  linen_modern: 'Đũi tơ tự nhiên cách tân',
+};
+
+export const PATTERN_LABELS: Record<Pattern, string> = {
+  plain: 'Vải trơn thuần khiết',
+  lotus: 'Họa tiết Hoa sen',
+  cloud: 'Họa tiết Vân mây ngũ sắc',
+  crane: 'Họa tiết Chim hạc phi thiên',
+  geometric_genz: 'Kỷ hà Gen Z Remix',
+};
+
+export const BODY_SHAPE_LABELS: Record<BodyShape, string> = {
+  standard: 'Dáng cơ bản (1.66m)',
+  petite: 'Dáng nhỏ nhắn (~1.56m)',
+  tall_slender: 'Dáng cao thanh (~1.72m)',
+  broad_shoulders: 'Khung vai rộng',
+  curvy_hips: 'Đường cong hông nở',
+  plus_size: 'Vóc dáng đầy đặn',
+};
+
+export const ACCESSORY_LABELS: Record<AccessoryId, string> = {
+  man_truyen_thong: 'Mấn lụa đội đầu',
+  non_la: 'Nón lá Bài thơ',
+  chuoi_ngoc: 'Chuỗi ngọc trai',
+  quat_xep: 'Quạt xếp lụa tre',
+  tui_coi: 'Túi cói đan mộc',
+  guoc_moc: 'Guốc mộc quai nhung',
+};
+
+export const GarmentConfigSchema = z.object({
+  garmentType: z.literal('aodai').default('aodai'),
+  primaryColor: ColorSchema,
+  pantsColor: ColorSchema,
+  collarStyle: CollarStyleEnum.default('traditional_high'),
+  sleeveStyle: SleeveStyleEnum.default('traditional_long'),
+  fabric: FabricEnum.default('silk_ha_dong'),
+  pattern: PatternEnum.default('plain'),
+  accessories: z.array(AccessoryIdEnum).default([]),
+  bodyShape: BodyShapeEnum.default('standard'),
+  modelId: GarmentModelIdEnum.default('aodai_traditional_v2'),
+  avatarId: z.string().default('avatar_v2'),
+});
+export type GarmentConfig = z.infer<typeof GarmentConfigSchema>;
+
+export const LockStateSchema = z.object({
+  primaryColor: z.boolean().default(false),
+  pantsColor: z.boolean().default(false),
+  collarStyle: z.boolean().default(false),
+  sleeveStyle: z.boolean().default(false),
+  fabric: z.boolean().default(false),
+  pattern: z.boolean().default(false),
+  accessories: z.boolean().default(false),
+  bodyShape: z.boolean().default(false),
+  modelId: z.boolean().default(false),
+  avatarId: z.boolean().default(false),
+});
+export type LockState = z.infer<typeof LockStateSchema>;
+
+// ==========================================
+// 2. Events & Styles
+// ==========================================
+
+export const EventIdEnum = z.enum(['ky_yeu', 'choi_tet', 'ngay_hoi_truong']);
+export type EventId = z.infer<typeof EventIdEnum>;
+
+export const StyleIdEnum = z.enum(['thanh_lich', 'tuoi_tre', 'toi_gian']);
+export type StyleId = z.infer<typeof StyleIdEnum>;
+
+export const EventItemSchema = z.object({
+  id: EventIdEnum,
+  name: z.string(),
+  description: z.string(),
+  culturalContext: z.string(),
+  recommendedStyles: z.array(StyleIdEnum),
+  colorPalettes: z.array(z.string()),
+});
+export type EventItem = z.infer<typeof EventItemSchema>;
+
+export const StyleItemSchema = z.object({
+  id: StyleIdEnum,
+  name: z.string(),
+  tagline: z.string(),
+  description: z.string(),
+});
+export type StyleItem = z.infer<typeof StyleItemSchema>;
+
+// ==========================================
+// 3. Look & Lookbook
+// ==========================================
+
+export const LookSchema = z.object({
+  id: z.string(),
+  sessionId: z.string().optional(),
+  title: z.string(),
+  eventId: EventIdEnum,
+  styleId: StyleIdEnum,
+  config: GarmentConfigSchema,
+  locks: LockStateSchema,
+  explanation: z.string().default(''),
+  revision: z.number().int().min(1).default(1),
+  isDesign: z.boolean().default(false),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type Look = z.infer<typeof LookSchema>;
+
+export const LookbookResourceTypeEnum = z.enum(['svg_2d', 'ai_prompt_image', 'ai_face_ref_image']);
+export type LookbookResourceType = z.infer<typeof LookbookResourceTypeEnum>;
+
+export const LookbookItemSchema = z.object({
+  id: z.string(),
+  sessionId: z.string().optional(),
+  title: z.string(),
+  lookId: z.string(),
+  revision: z.number().int(),
+  snapshotConfig: GarmentConfigSchema,
+  eventId: EventIdEnum,
+  styleId: StyleIdEnum,
+  notes: z.string().default(''),
+  resourceType: LookbookResourceTypeEnum.default('svg_2d').optional(),
+  designMetadata: z
+    .object({
+      mode: z.enum(['mock', 'live']).optional(),
+      model: z.string().optional(),
+      prompt: z.string().optional(),
+      generatedAt: z.string().optional(),
+      aiImageId: z.string().optional(),
+      aiImageUrl: z.string().optional(),
+      aiImagePrompt: z.string().optional(),
+      aiImageStyle: z.string().optional(),
+      resourceType: LookbookResourceTypeEnum.optional(),
+      referenceId: z.string().nullable().optional(),
+      parentImageId: z.string().nullable().optional(),
+      iteration: z.number().int().optional(),
+    })
+    .optional(),
+  createdAt: z.string(),
+});
+export type LookbookItem = z.infer<typeof LookbookItemSchema>;
+
+export const SessionInfoSchema = z.object({
+  sessionId: z.string(),
+  currentLookId: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  expiresAt: z.string().optional(),
+});
+export type SessionInfo = z.infer<typeof SessionInfoSchema>;
+
+export const SessionStateSchema = z.object({
+  sessionId: z.string(),
+  currentLookId: z.string(),
+  look: LookSchema,
+});
+export type SessionState = z.infer<typeof SessionStateSchema>;
+
+export const DesignObjectSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  config: GarmentConfigSchema,
+  eventId: EventIdEnum,
+  styleId: StyleIdEnum,
+  explanation: z.string(),
+  aiMetadata: z
+    .object({
+      mode: z.enum(['mock', 'live']).optional(),
+      model: z.string().optional(),
+      prompt: z.string().optional(),
+      generatedAt: z.string().optional(),
+    })
+    .optional(),
+  createdAt: z.string(),
+});
+export type DesignObject = z.infer<typeof DesignObjectSchema>;
+
+// ==========================================
+// 4. Command Architecture (Strict Discriminated Union)
+// ==========================================
+
+export const CommandActionEnum = z.enum([
+  'SET_EVENT',
+  'SET_STYLE',
+  'SET_PRIMARY_COLOR',
+  'SET_PANTS_COLOR',
+  'SET_COLLAR',
+  'SET_SLEEVE',
+  'SET_FABRIC',
+  'SET_PATTERN',
+  'TOGGLE_ACCESSORY',
+  'SET_ACCESSORIES',
+  'SET_BODY_SHAPE',
+  'SET_GARMENT_MODEL',
+  'SET_AVATAR',
+  'TOGGLE_LOCK',
+  'APPLY_PRESET',
+  'RESET_OUTFIT',
+  'APPLY_DESIGN',
+]);
+export type CommandAction = z.infer<typeof CommandActionEnum>;
+
+const BaseCommandSchema = z.object({
+  commandId: z.string().uuid(),
+  lookId: z.string(),
+  expectedRevision: z.number().int(),
+  timestamp: z.string(),
+});
+
+export const SetEventCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_EVENT'),
+  payload: z.object({
+    eventId: EventIdEnum,
+  }),
+});
+
+export const SetStyleCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_STYLE'),
+  payload: z.object({
+    styleId: StyleIdEnum,
+  }),
+});
+
+export const SetPrimaryColorCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_PRIMARY_COLOR'),
+  payload: z.object({
+    color: ColorSchema,
+  }),
+});
+
+export const SetPantsColorCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_PANTS_COLOR'),
+  payload: z.object({
+    color: ColorSchema,
+  }),
+});
+
+export const SetCollarCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_COLLAR'),
+  payload: z.object({
+    collarStyle: CollarStyleEnum,
+  }),
+});
+
+export const SetSleeveCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_SLEEVE'),
+  payload: z.object({
+    sleeveStyle: SleeveStyleEnum,
+  }),
+});
+
+export const SetFabricCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_FABRIC'),
+  payload: z.object({
+    fabric: FabricEnum,
+  }),
+});
+
+export const SetPatternCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_PATTERN'),
+  payload: z.object({
+    pattern: PatternEnum,
+  }),
+});
+
+export const ToggleAccessoryCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('TOGGLE_ACCESSORY'),
+  payload: z.object({
+    accessoryId: AccessoryIdEnum,
+  }),
+});
+
+export const SetAccessoriesCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_ACCESSORIES'),
+  payload: z.object({
+    accessories: z.array(AccessoryIdEnum),
+  }),
+});
+
+export const SetBodyShapeCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_BODY_SHAPE'),
+  payload: z.object({
+    bodyShape: BodyShapeEnum,
+  }),
+});
+
+export const SetGarmentModelCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_GARMENT_MODEL'),
+  payload: z.object({
+    modelId: GarmentModelIdEnum,
+  }),
+});
+
+export const SetAvatarCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('SET_AVATAR'),
+  payload: z.object({
+    avatarId: z.string().min(1),
+  }),
+});
+
+export const ToggleLockCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('TOGGLE_LOCK'),
+  payload: z.object({
+    field: z.enum(['primaryColor', 'pantsColor', 'collarStyle', 'sleeveStyle', 'fabric', 'pattern', 'accessories', 'bodyShape', 'modelId', 'avatarId']),
+  }),
+});
+
+export const DesignGarmentConfigSchema = GarmentConfigSchema.extend({
+  modelId: GarmentModelIdEnum.optional(),
+  bodyShape: BodyShapeEnum.optional(),
+  avatarId: z.string().optional(),
+});
+export type DesignGarmentConfig = z.infer<typeof DesignGarmentConfigSchema>;
+
+export const ApplyPresetCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('APPLY_PRESET'),
+  payload: z.object({
+    presetId: z.string().optional(),
+    config: DesignGarmentConfigSchema,
+    title: z.string().optional(),
+    explanation: z.string().optional(),
+    eventId: EventIdEnum.optional(),
+    styleId: StyleIdEnum.optional(),
+  }),
+});
+
+export const ApplyDesignCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('APPLY_DESIGN'),
+  payload: z.object({
+    designId: z.string().optional(),
+    config: DesignGarmentConfigSchema,
+    title: z.string().optional(),
+    explanation: z.string().optional(),
+    eventId: EventIdEnum.optional(),
+    styleId: StyleIdEnum.optional(),
+  }),
+});
+
+export const ResetOutfitCommandSchema = BaseCommandSchema.extend({
+  action: z.literal('RESET_OUTFIT'),
+  payload: z.record(z.any()).optional().default({}),
+});
+
+export const CommandPayloadSchema = z.discriminatedUnion('action', [
+  SetEventCommandSchema,
+  SetStyleCommandSchema,
+  SetPrimaryColorCommandSchema,
+  SetPantsColorCommandSchema,
+  SetCollarCommandSchema,
+  SetSleeveCommandSchema,
+  SetFabricCommandSchema,
+  SetPatternCommandSchema,
+  ToggleAccessoryCommandSchema,
+  SetAccessoriesCommandSchema,
+  SetBodyShapeCommandSchema,
+  SetGarmentModelCommandSchema,
+  SetAvatarCommandSchema,
+  ToggleLockCommandSchema,
+  ApplyPresetCommandSchema,
+  ApplyDesignCommandSchema,
+  ResetOutfitCommandSchema,
+]);
+export type CommandPayload = z.infer<typeof CommandPayloadSchema>;
+
+export const CommandResultSchema = z.object({
+  success: z.boolean(),
+  look: LookSchema,
+  newRevision: z.number().int(),
+  appliedCommandId: z.string(),
+  error: z.string().optional(),
+});
+export type CommandResult = z.infer<typeof CommandResultSchema>;
+
+export const UndoRequestSchema = z.object({
+  commandId: z.string().min(1, 'commandId không được để trống'),
+  expectedRevision: z.number().int('expectedRevision phải là số nguyên').nonnegative('expectedRevision không được là số âm'),
+});
+export type UndoRequest = z.infer<typeof UndoRequestSchema>;
+
+export interface MutationResult {
+  success: boolean;
+  busy?: boolean;
+  error?: string;
+  code?: string;
+  look?: Look;
+}
+
+export interface SaveLookbookResult {
+  status: 'saved' | 'busy' | 'failed';
+  message: string;
+  item?: LookbookItem;
+  refetched?: boolean;
+}
+
+// ==========================================
+// 5. Culture Cards (Verified Cultural Sources)
+// ==========================================
+
+export const CultureCardStatusEnum = z.enum(['published', 'review', 'draft']);
+export type CultureCardStatus = z.infer<typeof CultureCardStatusEnum>;
+
+export const CultureCardSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  title: z.string(),
+  category: z.enum(['lich_su', 'bieu_tuong', 'chat_lieu', 'phu_kien', 'nghi_thuc']),
+  summary: z.string(),
+  content: z.string(),
+  sourceName: z.string(),
+  sourceAuthor: z.string(),
+  sourceUrl: z.string().optional(),
+  sourceEvidence: z.string(),
+  status: CultureCardStatusEnum.default('published'),
+  createdAt: z.string(),
+});
+export type CultureCard = z.infer<typeof CultureCardSchema>;
+
+// ==========================================
+// 6. AI Adapter Contracts
+// ==========================================
+
+export const AIStatusSchema = z.object({
+  configured: z.boolean(),
+  endpointConnected: z.boolean().default(false),
+  modelVerified: z.boolean().default(false),
+  mode: z.enum(['mock', 'live']),
+  provider: z.string(),
+  model: z.string(),
+  capabilities: z.object({
+    textChat: z.boolean(),
+    structuredCommands: z.boolean(),
+    imageGen: z.boolean(),
+  }),
+  message: z.string().optional(),
+});
+export type AIStatus = z.infer<typeof AIStatusSchema>;
+
+export const AIChatRequestSchema = z.object({
+  lookId: z.string(),
+  message: z.string().min(1, 'Tin nhắn không được để trống').max(1000, 'Tin nhắn tối đa 1000 ký tự'),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string().max(2000, 'Nội dung lịch sử tối đa 2000 ký tự'),
+      })
+    )
+    .max(10, 'Lịch sử tối đa 10 tin nhắn')
+    .default([]),
+});
+export type AIChatRequest = z.infer<typeof AIChatRequestSchema>;
+
+export const AICitationSchema = z.object({
+  title: z.string(),
+  source: z.string(),
+  ref: z.string(),
+  sourceUrl: z.string().optional(),
+});
+export type AICitation = z.infer<typeof AICitationSchema>;
+
+export const AIChatResponseSchema = z.object({
+  reply: z.string(),
+  explanation: z.string().optional(),
+  commands: z.array(CommandPayloadSchema).optional(),
+  citations: z.array(AICitationSchema).optional(),
+  suggestedActionLabel: z.string().optional(),
+  mode: z.enum(['mock', 'live']),
+  model: z.string(),
+  commandsStatus: z.enum(['none', 'planned', 'partially_applied', 'all_applied', 'failed']).optional(),
+});
+export type AIChatResponse = z.infer<typeof AIChatResponseSchema>;
+
+export const StructuredDesignRequestSchema = z.object({
+  prompt: z.string(),
+  eventId: EventIdEnum,
+  styleId: StyleIdEnum,
+  baseLookId: z.string().optional(),
+});
+export type StructuredDesignRequest = z.infer<typeof StructuredDesignRequestSchema>;
+
+export const ConceptTaskSchema = z.object({
+  id: z.string(),
+  prompt: z.string(),
+  status: z.enum(['pending', 'processing', 'completed', 'failed']),
+  imageUrl: z.string().optional(),
+  error: z.string().optional(),
+  createdAt: z.string(),
+});
+export type ConceptTask = z.infer<typeof ConceptTaskSchema>;
+
+// ==========================================
+// 6b. AI Image Generation Contracts (2D Illustration)
+// ==========================================
+
+export const AIImageStylePresetEnum = z.enum([
+  'elegant_fashion_2d',
+  'digital_painting_2d',
+  'modern_watercolor_2d',
+  'flat_vector_2d',
+]);
+export type AIImageStylePreset = z.infer<typeof AIImageStylePresetEnum>;
+
+export const AI_IMAGE_STYLE_LABELS: Record<AIImageStylePreset, string> = {
+  elegant_fashion_2d: 'Minh họa thời trang 2D thanh lịch',
+  digital_painting_2d: 'Digital painting 2D mỹ thuật',
+  modern_watercolor_2d: 'Tranh màu nước hiện đại',
+  flat_vector_2d: 'Flat fashion illustration',
+};
+
+export const BackgroundSettingEnum = z.enum([
+  'studio_minimal',
+  'hanoi_ancient',
+  'hue_palace',
+  'lotus_pond',
+  'solid_color',
+]);
+export type BackgroundSetting = z.infer<typeof BackgroundSettingEnum>;
+
+export const BACKGROUND_SETTING_LABELS: Record<BackgroundSetting, string> = {
+  studio_minimal: 'Phòng chụp studio tối giản',
+  hanoi_ancient: 'Phố cổ Hà Nội / Hội An',
+  hue_palace: 'Cung đình & chùa cổ linh thiêng',
+  lotus_pond: 'Hồ sen thơm ngát',
+  solid_color: 'Phông nền đơn sắc nghệ thuật',
+};
+
+export const PoseStyleEnum = z.enum([
+  'full_body_standing',
+  'full_body_sitting',
+  'three_quarter',
+]);
+export type PoseStyle = z.infer<typeof PoseStyleEnum>;
+
+export const POSE_STYLE_LABELS: Record<PoseStyle, string> = {
+  full_body_standing: 'Toàn thân đứng thanh thoát',
+  full_body_sitting: 'Toàn thân ngồi duyên dáng',
+  three_quarter: 'Dáng 3/4 nghệ thuật',
+};
+
+export const AIImageJobStatusEnum = z.enum(['pending', 'processing', 'completed', 'failed']);
+export type AIImageJobStatus = z.infer<typeof AIImageJobStatusEnum>;
+
+export const AIImageParsedDetailsSchema = z.object({
+  garmentModel: GarmentModelIdEnum.optional(),
+  primaryColor: ColorSchema.optional(),
+  pantsColor: ColorSchema.optional(),
+  collarStyle: CollarStyleEnum.optional(),
+  sleeveStyle: SleeveStyleEnum.optional(),
+  fabric: FabricEnum.optional(),
+  pattern: PatternEnum.optional(),
+  accessories: z.array(AccessoryIdEnum).optional(),
+  backgroundContext: z.string().optional(),
+  pose: z.string().optional(),
+  imageStyle: AIImageStylePresetEnum.optional(),
+  unsupportedRequests: z.array(z.string()).default([]),
+  warnings: z.array(z.string()).default([]),
+  preservedLocks: z.array(z.string()).default([]),
+  finalPrompt: z.string().optional(),
+});
+export type AIImageParsedDetails = z.infer<typeof AIImageParsedDetailsSchema>;
+
+export const AIImageGenerateRequestSchema = z.object({
+  prompt: z.string().min(1, 'Mô tả hình ảnh không được để trống').max(1000, 'Mô tả tối đa 1000 ký tự'),
+  lookId: z.string().optional(),
+  stylePreset: AIImageStylePresetEnum.default('elegant_fashion_2d').optional(),
+  useCurrentLookAsBase: z.boolean().default(false).optional(),
+  customConfig: GarmentConfigSchema.optional(),
+  referenceId: z.string().optional(),
+  parentImageId: z.string().optional(),
+  backgroundSetting: BackgroundSettingEnum.optional(),
+  poseStyle: PoseStyleEnum.optional(),
+  facePreservation: z.boolean().default(true).optional(),
+  async: z.boolean().default(false).optional(),
+});
+export type AIImageGenerateRequest = z.infer<typeof AIImageGenerateRequestSchema>;
+
+export const AIImageJobSchema = z.object({
+  id: z.string(),
+  sessionId: z.string(),
+  lookId: z.string().nullable().optional(),
+  prompt: z.string(),
+  stylePreset: AIImageStylePresetEnum,
+  status: AIImageJobStatusEnum,
+  imageUrl: z.string().optional(),
+  downloadUrl: z.string().optional(),
+  modelUsed: z.string().optional(),
+  width: z.number().int().optional(),
+  height: z.number().int().optional(),
+  fileSize: z.number().int().optional(),
+  durationMs: z.number().int().optional(),
+  parsedDetails: AIImageParsedDetailsSchema.optional(),
+  errorMessage: z.string().optional(),
+  parentImageId: z.string().nullable().optional(),
+  referenceId: z.string().nullable().optional(),
+  iteration: z.number().int().default(1).optional(),
+  refinementPrompt: z.string().nullable().optional(),
+  backgroundSetting: z.string().nullable().optional(),
+  poseStyle: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type AIImageJob = z.infer<typeof AIImageJobSchema>;
+
+export const FaceReferenceUploadRequestSchema = z.object({
+  data: z.string().min(1, 'Dữ liệu ảnh không được để trống'),
+  filename: z.string().optional(),
+});
+export type FaceReferenceUploadRequest = z.infer<typeof FaceReferenceUploadRequestSchema>;
+
+export const FaceReferenceItemSchema = z.object({
+  id: z.string(),
+  filename: z.string().optional(),
+  sessionId: z.string().optional(),
+  referenceUrl: z.string().optional(),
+  fileSize: z.number().int(),
+  mimeType: z.string(),
+  createdAt: z.string(),
+  expiresAt: z.string(),
+});
+export type FaceReferenceItem = z.infer<typeof FaceReferenceItemSchema>;
+export const FaceReferenceSchema = FaceReferenceItemSchema;
+export type FaceReference = FaceReferenceItem;
+
+export const ConversationalEditRequestSchema = z.object({
+  parentImageId: z.string().min(1, 'parentImageId không được để trống'),
+  instruction: z.string().min(1, 'Câu lệnh chỉnh sửa không được để trống').max(1000, 'Tối đa 1000 ký tự'),
+  keepFaceReference: z.boolean().default(true).optional(),
+  stylePreset: AIImageStylePresetEnum.optional(),
+  backgroundSetting: BackgroundSettingEnum.optional(),
+  poseStyle: PoseStyleEnum.optional(),
+  lookId: z.string().optional(),
+  async: z.boolean().default(false).optional(),
+});
+export type ConversationalEditRequest = z.infer<typeof ConversationalEditRequestSchema>;
+
+// ==========================================
+// 7. Structured AI 3D Design Proposal Contracts
+// ==========================================
+
+export const ProposalDiffSchema = z.object({
+  changedFields: z.array(z.string()),
+  addedAccessories: z.array(AccessoryIdEnum),
+  removedAccessories: z.array(AccessoryIdEnum),
+  colorChanges: z.array(
+    z.object({
+      field: z.string(),
+      from: z.string(),
+      to: z.string(),
+    })
+  ),
+});
+export type ProposalDiff = z.infer<typeof ProposalDiffSchema>;
+
+export const DesignProposalSchema = z.object({
+  schemaVersion: z.literal('2.0.0').default('2.0.0'),
+  proposalId: z.string(),
+  targetLookId: z.string(),
+  baseRevision: z.number(),
+  baseEventId: EventIdEnum.optional(),
+  baseStyleId: StyleIdEnum.optional(),
+  catalogVersion: z.string().default('2.0.0'),
+  title: z.string(),
+  proposedConfig: GarmentConfigSchema,
+  diff: ProposalDiffSchema,
+  explanation: z.string(),
+  unsupportedRequests: z.array(z.string()).default([]),
+  warnings: z.array(z.string()).default([]),
+  citations: z.array(AICitationSchema).default([]),
+  mode: z.enum(['mock', 'live']),
+  model: z.string(),
+  createdAt: z.string(),
+});
+export type DesignProposal = z.infer<typeof DesignProposalSchema>;
+
+export const DesignProposalRequestSchema = z.object({
+  prompt: z.string().min(1, 'Mô tả thiết kế không được để trống').max(500, 'Tối đa 500 ký tự'),
+  eventId: EventIdEnum,
+  styleId: StyleIdEnum,
+  targetLookId: z.string(),
+  expectedRevision: z.number(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'assistant']),
+        content: z.string(),
+      })
+    )
+    .optional(),
+  activeProposalConfig: GarmentConfigSchema.optional(),
+});
+export type DesignProposalRequest = z.infer<typeof DesignProposalRequestSchema>;
+
+export const ValidateProposalResponseSchema = z.object({
+  valid: z.boolean(),
+  stale: z.boolean(),
+  errors: z.array(z.string()),
+  warnings: z.array(z.string()),
+  proposal: DesignProposalSchema.optional(),
+});
+export type ValidateProposalResponse = z.infer<typeof ValidateProposalResponseSchema>;
+

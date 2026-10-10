@@ -1,0 +1,800 @@
+{
+  "version": "2.0.0",
+  "updatedAt": "2026-09-29T07:19:10.446Z",
+  "engine": "Three.js 0.169.0 / React Three Fiber 8.17.10",
+  "conventions": {
+    "unit": "meters",
+    "coordinateSystem": "Y-up, Z-forward, X-right",
+    "groundPlaneY": 0,
+    "baseHeight": 1.666
+  },
+  "sockets": {
+    "head": {
+      "basePosition": [
+        0,
+        1.625,
+        -0.01
+      ],
+      "trackedFeature": "crown"
+    },
+    "neck": {
+      "basePosition": [
+        0,
+        1.39,
+        -0.012
+      ],
+      "trackedFeature": "clavicle"
+    },
+    "right_hand": {
+      "basePosition": [
+        0.29,
+        0.77,
+        0
+      ],
+      "trackedFeature": "right_wrist"
+    },
+    "left_hand": {
+      "basePosition": [
+        -0.29,
+        0.77,
+        0
+      ],
+      "trackedFeature": "left_wrist"
+    },
+    "feet": {
+      "basePosition": [
+        0,
+        0,
+        0.015
+      ],
+      "trackedFeature": "ground"
+    }
+  },
+  "bodyPresets": [
+    {
+      "id": "standard",
+      "name": "Dáng cơ bản",
+      "description": "Tỷ lệ hình thể cơ bản cân đối tự nhiên (1.66m)",
+      "weights": {
+        "morph_petite": 0,
+        "morph_tall_slender": 0,
+        "morph_broad_shoulders": 0,
+        "morph_curvy_hips": 0,
+        "morph_plus_size": 0
+      }
+    },
+    {
+      "id": "petite",
+      "name": "Nhỏ nhắn",
+      "description": "Dáng vóc thanh mảnh, chiều cao ~1.56m",
+      "weights": {
+        "morph_petite": 1,
+        "morph_tall_slender": 0,
+        "morph_broad_shoulders": 0,
+        "morph_curvy_hips": 0,
+        "morph_plus_size": 0
+      }
+    },
+    {
+      "id": "tall_slender",
+      "name": "Cao thanh",
+      "description": "Dáng người cao ráo dong dỏng, chiều cao ~1.72m",
+      "weights": {
+        "morph_petite": 0,
+        "morph_tall_slender": 1,
+        "morph_broad_shoulders": 0,
+        "morph_curvy_hips": 0,
+        "morph_plus_size": 0
+      }
+    },
+    {
+      "id": "broad_shoulders",
+      "name": "Khung vai rộng",
+      "description": "Bờ vai mở rộng đĩnh đạc, cầu vai ngang tôn nét thanh tao",
+      "weights": {
+        "morph_petite": 0,
+        "morph_tall_slender": 0,
+        "morph_broad_shoulders": 1,
+        "morph_curvy_hips": 0,
+        "morph_plus_size": 0
+      }
+    },
+    {
+      "id": "curvy_hips",
+      "name": "Hông nở",
+      "description": "Vòng hông nở nang, tạo đường cong lượn tà áo chữ S mềm mại",
+      "weights": {
+        "morph_petite": 0,
+        "morph_tall_slender": 0,
+        "morph_broad_shoulders": 0,
+        "morph_curvy_hips": 1,
+        "morph_plus_size": 0
+      }
+    },
+    {
+      "id": "plus_size",
+      "name": "Đầy đặn",
+      "description": "Thân hình đẫy đà, đường nét tròn đầy quý phái",
+      "weights": {
+        "morph_petite": 0,
+        "morph_tall_slender": 0,
+        "morph_broad_shoulders": 0,
+        "morph_curvy_hips": 0,
+        "morph_plus_size": 1
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "aodai_traditional_v2",
+      "name": "Áo Dài Cổ Cao 4.2cm Chuẩn V2 (DCC Master)",
+      "category": "classic",
+      "meshUrl": "/models/aodai_traditional_v2.glb",
+      "pantsUrl": "/models/pants_silk_v2.glb",
+      "avatarUrl": "/models/avatar_v2.glb",
+      "materialSlots": [
+        "AoDaiMaterial"
+      ],
+      "features": {
+        "collar": "Cổ đứng 4.2cm thành dày 2 lớp nẹp viền khép kín",
+        "sleeve": "Tay dài ráp vai suôn tự nhiên có độ chùng dập dềnh",
+        "flaps": "Tà kép liền khối xẻ eo cao nẹp viền không xuyên thấu",
+        "pants": "Quần lụa hai ống rời có cạp và đũng 3D hoàn chỉnh"
+      },
+      "supportedMorphs": [
+        "morph_petite",
+        "morph_tall_slender",
+        "morph_broad_shoulders",
+        "morph_curvy_hips",
+        "morph_plus_size"
+      ],
+      "metadata": {
+        "author": "Dáng Việt Digital Studio & Blender Studio (CC0 Human Base Mesh)",
+        "license": "CC-BY-4.0",
+        "createdVia": "Blender 3.6 LTS Headless Pipeline"
+      }
+    },
+    {
+      "id": "aodai_classic_01",
+      "name": "Áo Dài Cổ Đứng Truyền Thống",
+      "category": "classic",
+      "meshUrl": "/models/aodai_classic_01.glb",
+      "pantsUrl": "/models/pants_silk.glb",
+      "avatarUrl": "/models/avatar_base.glb",
+      "materialSlots": [
+        "AoDaiMaterial"
+      ],
+      "features": {
+        "collar": "Cổ đứng 3.8cm truyền thống",
+        "sleeve": "Tay dài ráp vai suôn",
+        "flaps": "Tà dài qua gối xẻ eo",
+        "pants": "Quần lụa ống rộng hai ống"
+      },
+      "supportedMorphs": [
+        "morph_petite",
+        "morph_tall_slender",
+        "morph_broad_shoulders",
+        "morph_curvy_hips",
+        "morph_plus_size"
+      ],
+      "metadata": {
+        "author": "Dáng Việt Digital Studio",
+        "license": "CC-BY-4.0",
+        "createdVia": "DCC Pure Binary glTF Generator"
+      }
+    },
+    {
+      "id": "aodai_remix_raglan",
+      "name": "Áo Dài Cổ Thuyền Tay Raglan Cách Tân",
+      "category": "modern",
+      "meshUrl": "/models/aodai_remix_raglan.glb",
+      "pantsUrl": "/models/pants_silk.glb",
+      "avatarUrl": "/models/avatar_base.glb",
+      "materialSlots": [
+        "AoDaiMaterial"
+      ],
+      "features": {
+        "collar": "Cổ thuyền thanh thoát",
+        "sleeve": "Tay raglan vát nách ôm vai",
+        "flaps": "Tà lỡ midi hiện đại xẻ eo",
+        "pants": "Quần lụa ống rộng hai ống"
+      },
+      "supportedMorphs": [
+        "morph_petite",
+        "morph_tall_slender",
+        "morph_broad_shoulders",
+        "morph_curvy_hips",
+        "morph_plus_size"
+      ],
+      "metadata": {
+        "author": "Dáng Việt Digital Studio",
+        "license": "CC-BY-4.0",
+        "createdVia": "DCC Pure Binary glTF Generator"
+      }
+    }
+  ],
+  "accessories": [
+    {
+      "id": "man_truyen_thong",
+      "name": "Mấn Đội Đầu Truyền Thống",
+      "modelUrl": "/models/accessories/man_truyen_thong.glb",
+      "socket": "head"
+    },
+    {
+      "id": "non_la",
+      "name": "Nón Lá Bài Thơ",
+      "modelUrl": "/models/accessories/non_la.glb",
+      "socket": "head"
+    },
+    {
+      "id": "chuoi_ngoc",
+      "name": "Chuỗi Ngọc Trai",
+      "modelUrl": "/models/accessories/chuoi_ngoc.glb",
+      "socket": "neck"
+    },
+    {
+      "id": "quat_xep",
+      "name": "Quạt Xếp Cầm Tay",
+      "modelUrl": "/models/accessories/quat_xep.glb",
+      "socket": "right_hand"
+    },
+    {
+      "id": "tui_coi",
+      "name": "Túi Cói Quai Mộc",
+      "modelUrl": "/models/accessories/tui_coi.glb",
+      "socket": "left_hand"
+    },
+    {
+      "id": "guoc_moc",
+      "name": "Guốc Mộc Quai Nhung",
+      "modelUrl": "/models/accessories/guoc_moc.glb",
+      "socket": "feet"
+    }
+  ],
+  "avatars": [
+    {
+      "avatarId": "avatar_v2",
+      "assetVersion": "2.0.0",
+      "glbPath": "/models/avatar_v2.glb",
+      "displayName": "Avatar Nữ Trưởng Thành Chuẩn V2 (DCC Master)",
+      "category": "adult_female",
+      "license": "CC-BY-4.0",
+      "source": "Blender 3.6 LTS Headless Pipeline",
+      "author": "Dáng Việt Digital Studio & Blender Studio (CC0 Human Base Mesh)",
+      "bounds": {
+        "min": [
+          -0.29,
+          0,
+          -0.15
+        ],
+        "max": [
+          0.29,
+          1.643,
+          0.15
+        ],
+        "height": 1.643
+      },
+      "materialBindings": {
+        "SkinMaterial": {
+          "slot": "SkinMaterial",
+          "type": "skin",
+          "preserveTexture": true
+        },
+        "HairMaterial": {
+          "slot": "HairMaterial",
+          "type": "hair",
+          "preserveTexture": true
+        }
+      },
+      "supportedBodyPresets": [
+        "standard",
+        "petite",
+        "tall_slender",
+        "broad_shoulders",
+        "curvy_hips",
+        "plus_size"
+      ],
+      "rigStatus": {
+        "isRigged": false,
+        "hasMorphTargets": true
+      },
+      "sockets": {
+        "head": {
+          "basePosition": [
+            0,
+            1.625,
+            -0.01
+          ],
+          "trackedFeature": "crown"
+        },
+        "neck": {
+          "basePosition": [
+            0,
+            1.39,
+            -0.012
+          ],
+          "trackedFeature": "clavicle"
+        },
+        "right_hand": {
+          "basePosition": [
+            0.29,
+            0.77,
+            0
+          ],
+          "trackedFeature": "right_wrist"
+        },
+        "left_hand": {
+          "basePosition": [
+            -0.29,
+            0.77,
+            0
+          ],
+          "trackedFeature": "left_wrist"
+        },
+        "feet": {
+          "basePosition": [
+            0,
+            0,
+            0.015
+          ],
+          "trackedFeature": "ground"
+        }
+      },
+      "checksumSha256": "25855f70f6cd4a23c6359d50b08f4f92db5aca82eaf0c376618980cfeb081082",
+      "registeredAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "assetVersion": "1.0.0",
+      "glbPath": "/models/avatar_base.glb",
+      "displayName": "Avatar Nữ Cơ Bản (Dáng Việt V1)",
+      "category": "adult_female",
+      "license": "CC-BY-4.0",
+      "source": "DCC Pure Binary glTF Generator",
+      "author": "Dáng Việt Digital Studio",
+      "bounds": {
+        "min": [
+          -0.29,
+          0,
+          -0.15
+        ],
+        "max": [
+          0.29,
+          1.669,
+          0.15
+        ],
+        "height": 1.669
+      },
+      "materialBindings": {
+        "SkinMaterial": {
+          "slot": "SkinMaterial",
+          "type": "skin",
+          "preserveTexture": true
+        },
+        "HairMaterial": {
+          "slot": "HairMaterial",
+          "type": "hair",
+          "preserveTexture": true
+        }
+      },
+      "supportedBodyPresets": [
+        "standard",
+        "petite",
+        "tall_slender",
+        "broad_shoulders",
+        "curvy_hips",
+        "plus_size"
+      ],
+      "rigStatus": {
+        "isRigged": false,
+        "hasMorphTargets": true
+      },
+      "sockets": {
+        "head": {
+          "basePosition": [
+            0,
+            1.625,
+            -0.01
+          ],
+          "trackedFeature": "crown"
+        },
+        "neck": {
+          "basePosition": [
+            0,
+            1.39,
+            -0.012
+          ],
+          "trackedFeature": "clavicle"
+        },
+        "right_hand": {
+          "basePosition": [
+            0.29,
+            0.77,
+            0
+          ],
+          "trackedFeature": "right_wrist"
+        },
+        "left_hand": {
+          "basePosition": [
+            -0.29,
+            0.77,
+            0
+          ],
+          "trackedFeature": "left_wrist"
+        },
+        "feet": {
+          "basePosition": [
+            0,
+            0,
+            0.015
+          ],
+          "trackedFeature": "ground"
+        }
+      },
+      "checksumSha256": "5647e5cf5f0f8b91b137c99a3f1bf6030b43e18f4aa628b8dd7638347354ebd8",
+      "registeredAt": "2026-09-29T00:00:00.000Z"
+    }
+  ],
+  "compatibilityMatrix": [
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "standard",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V2 (DCC Master)",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "petite",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V2 (DCC Master)",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "tall_slender",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V2 (DCC Master)",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "broad_shoulders",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V2 (DCC Master)",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "curvy_hips",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V2 (DCC Master)",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "plus_size",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V2 (DCC Master)",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "standard",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cổ đứng truyền thống",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "petite",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cổ đứng truyền thống",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "tall_slender",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cổ đứng truyền thống",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "broad_shoulders",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cổ đứng truyền thống",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "curvy_hips",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cổ đứng truyền thống",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "plus_size",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cổ đứng truyền thống",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "standard",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cách tân tay raglan",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "petite",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cách tân tay raglan",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "tall_slender",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cách tân tay raglan",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "broad_shoulders",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cách tân tay raglan",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "curvy_hips",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cách tân tay raglan",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "plus_size",
+      "status": "verified",
+      "reason": "Đồng bộ phom dáng chuẩn V1 cách tân tay raglan",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "standard",
+      "status": "unsupported",
+      "reason": "Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "petite",
+      "status": "unsupported",
+      "reason": "Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "tall_slender",
+      "status": "unsupported",
+      "reason": "Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "broad_shoulders",
+      "status": "unsupported",
+      "reason": "Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "curvy_hips",
+      "status": "unsupported",
+      "reason": "Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_base",
+      "avatarVersion": "1.0.0",
+      "garmentModelId": "aodai_traditional_v2",
+      "garmentVersion": "2.0.0",
+      "bodyShape": "plus_size",
+      "status": "unsupported",
+      "reason": "Mẫu áo V2 yêu cầu avatar V2 có phom giải phẫu tỷ lệ chuẩn",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "standard",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "petite",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "tall_slender",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "broad_shoulders",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "curvy_hips",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_classic_01",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "plus_size",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "standard",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "petite",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "tall_slender",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "broad_shoulders",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "curvy_hips",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    },
+    {
+      "avatarId": "avatar_v2",
+      "avatarVersion": "2.0.0",
+      "garmentModelId": "aodai_remix_raglan",
+      "garmentVersion": "1.0.0",
+      "bodyShape": "plus_size",
+      "status": "untested",
+      "reason": "Chưa kiểm thử xuyên mesh trên avatar v2",
+      "verifiedAt": "2026-09-29T00:00:00.000Z"
+    }
+  ]
+}

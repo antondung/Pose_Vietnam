@@ -1,0 +1,486 @@
+import React from 'react';
+import { type EventItem, type CultureCard } from '@dangviet/contracts';
+import { AoDaiVisualizer } from './AoDaiVisualizer.tsx';
+import { ArrowRight, BookOpen, Sparkles, CheckCircle2, ExternalLink } from 'lucide-react';
+
+interface ExploreSectionProps {
+  events: EventItem[];
+  presets: any[];
+  cultureCards: CultureCard[];
+  onSelectEvent: (eventId: string) => Promise<void> | void;
+  onApplyPreset: (preset: any) => Promise<void> | void;
+  isBusy?: boolean;
+}
+
+export const ExploreSection: React.FC<ExploreSectionProps> = ({
+  events,
+  presets,
+  cultureCards,
+  onSelectEvent,
+  onApplyPreset,
+  isBusy = false,
+}) => {
+  const [cultureFilter, setCultureFilter] = React.useState<'published' | 'all'>('published');
+  const [pendingEventId, setPendingEventId] = React.useState<string | null>(null);
+  const [pendingPresetId, setPendingPresetId] = React.useState<string | null>(null);
+
+  const isInteracting = isBusy || pendingEventId !== null || pendingPresetId !== null;
+
+  const handleSelectEventClick = async (eventId: string) => {
+    if (isInteracting) return;
+    setPendingEventId(eventId);
+    try {
+      await onSelectEvent(eventId);
+    } finally {
+      setPendingEventId(null);
+    }
+  };
+
+  const handleApplyPresetClick = async (preset: any) => {
+    if (isInteracting) return;
+    setPendingPresetId(preset.id);
+    try {
+      await onApplyPreset(preset);
+    } finally {
+      setPendingPresetId(null);
+    }
+  };
+
+  const displayedCards = React.useMemo(() => {
+    if (cultureFilter === 'published') {
+      return cultureCards.filter((c) => c.status === 'published');
+    }
+    return cultureCards;
+  }, [cultureCards, cultureFilter]);
+  return (
+    <div className="explore-section" style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+      {/* 1. Hero Introduction */}
+      <section
+        style={{
+          background: 'linear-gradient(135deg, #FAF8F5 0%, #F5ECE9 100%)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '2.5rem',
+          border: '1px solid var(--border-medium)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '2rem',
+          alignItems: 'center',
+        }}
+      >
+        <div>
+          <span
+            style={{
+              display: 'inline-block',
+              background: 'var(--accent-red-soft)',
+              color: 'var(--accent-red)',
+              padding: '0.35rem 0.85rem',
+              borderRadius: 'var(--radius-full)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              marginBottom: '1rem',
+            }}
+          >
+            Đề bài thi: Việt phục Remix — Phong cách Gen Z
+          </span>
+          <h2
+            style={{
+              fontFamily: 'var(--font-serif)',
+              fontSize: '2.2rem',
+              color: 'var(--text-primary)',
+              lineHeight: 1.25,
+              marginBottom: '1rem',
+            }}
+          >
+            Khám phá Việt phục, <br />
+            <span style={{ color: 'var(--accent-red)' }}>tạo nên dáng riêng.</span>
+          </h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', marginBottom: '1.75rem', lineHeight: 1.6 }}>
+            Dáng Việt đồng hành cùng học sinh, sinh viên giải mã chiều sâu di sản áo dài, tự do phối màu, phụ kiện và thử nghiệm các phong cách đương đại cho từng sự kiện thanh xuân.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => handleSelectEventClick('ky_yeu')}
+              disabled={isInteracting}
+              style={{
+                background: 'var(--accent-red)',
+                color: 'white',
+                padding: '0.75rem 1.5rem',
+                borderRadius: 'var(--radius-full)',
+                fontWeight: 600,
+                fontSize: '0.95rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: 'var(--shadow-sm)',
+                opacity: isInteracting ? 0.6 : 1,
+                cursor: isInteracting ? 'not-allowed' : 'pointer',
+              }}
+            >
+              <span>{pendingEventId === 'ky_yeu' ? 'Đang chuyển...' : 'Vào Phòng phối ngay'}</span>
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div
+            style={{
+              background: 'white',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.25rem',
+              boxShadow: 'var(--shadow-md)',
+              border: '1px solid var(--border-light)',
+            }}
+          >
+            <AoDaiVisualizer
+              config={presets[0]?.config || {
+                primaryColor: { hex: '#B83A24', name: 'Đỏ son hoàng gia' },
+                pantsColor: { hex: '#FFFFFF', name: 'Trắng tinh khôi' },
+                accessories: ['chuoi_ngoc', 'non_la'],
+              }}
+              size="md"
+              mode="thumbnail"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Three Main Events */}
+      <section>
+        <div style={{ marginBottom: '1.5rem' }}>
+          <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', color: 'var(--text-primary)' }}>
+            3 Bối cảnh sự kiện tiêu biểu
+          </h3>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+            Mỗi sự kiện mang một tinh thần và quy tắc thẩm mỹ riêng
+          </p>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          {events.map((ev) => (
+            <div
+              key={ev.id}
+              style={{
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.75rem',
+                border: '1px solid var(--border-light)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <span
+                    style={{
+                      background: 'var(--accent-blue-soft)',
+                      color: 'var(--accent-blue)',
+                      padding: '0.2rem 0.65rem',
+                      borderRadius: 'var(--radius-full)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Bối cảnh học đường
+                  </span>
+                </div>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.3rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
+                  {ev.name}
+                </h4>
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: 1.5 }}>
+                  {ev.description}
+                </p>
+                <div
+                  style={{
+                    background: 'var(--bg-subtle)',
+                    padding: '0.75rem',
+                    borderRadius: 'var(--radius-md)',
+                    fontSize: '0.8rem',
+                    color: 'var(--text-secondary)',
+                    marginBottom: '1.25rem',
+                  }}
+                >
+                  <strong style={{ color: 'var(--text-primary)' }}>Ý nghĩa văn hóa: </strong>
+                  {ev.culturalContext}
+                </div>
+              </div>
+
+              <button
+                onClick={() => handleSelectEventClick(ev.id)}
+                disabled={isInteracting}
+                style={{
+                  width: '100%',
+                  padding: '0.65rem',
+                  background: 'var(--bg-subtle)',
+                  color: 'var(--accent-red)',
+                  borderRadius: 'var(--radius-md)',
+                  fontWeight: 600,
+                  fontSize: '0.88rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.4rem',
+                  border: '1px solid var(--border-medium)',
+                  opacity: isInteracting ? 0.6 : 1,
+                  cursor: isInteracting ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <span>{pendingEventId === ev.id ? 'Đang áp dụng sự kiện...' : 'Phối đồ cho sự kiện này'}</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 3. 12 Suggested Presets Gallery */}
+      <section>
+        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', color: 'var(--text-primary)' }}>
+              12 Gợi ý phối đồ nổi bật
+            </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '0.25rem' }}>
+              Được nghiên cứu tỉ mỉ theo từng sự kiện và phong cách thẩm mỹ
+            </p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', fontStyle: 'italic' }}>
+              Hình minh họa 2D; màu sắc và chất liệu thực tế có thể khác.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' }}>
+          {presets.map((preset) => (
+            <div
+              key={preset.id}
+              className="preset-card"
+              style={{
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.25rem',
+                border: '1px solid var(--border-light)',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: 'var(--shadow-sm)',
+                height: '100%',
+                boxSizing: 'border-box',
+              }}
+            >
+              <div
+                style={{
+                  width: '100%',
+                  height: '260px',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  background: 'var(--bg-subtle)',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '0.75rem',
+                  boxSizing: 'border-box',
+                }}
+              >
+                <AoDaiVisualizer config={preset.config} size="sm" mode="thumbnail" />
+              </div>
+
+              <div style={{ width: '100%', display: 'flex', flexDirection: 'column', flex: 1, marginTop: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.45rem', gap: '0.5rem' }}>
+                  <h4 style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                    {preset.title}
+                  </h4>
+                  <span
+                    style={{
+                      fontSize: '0.72rem',
+                      padding: '0.15rem 0.55rem',
+                      background: 'var(--bg-subtle)',
+                      borderRadius: 'var(--radius-full)',
+                      fontWeight: 600,
+                      color: 'var(--text-muted)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    {preset.styleId === 'thanh_lich' ? 'Thanh lịch' : preset.styleId === 'tuoi_tre' ? 'Tươi trẻ' : 'Tối giản'}
+                  </span>
+                </div>
+
+                <p
+                  style={{
+                    fontSize: '0.82rem',
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.5,
+                    marginBottom: '1.25rem',
+                  }}
+                >
+                  {preset.explanation}
+                </p>
+
+                <div style={{ marginTop: 'auto', width: '100%' }}>
+                  <button
+                    onClick={() => handleApplyPresetClick(preset)}
+                    disabled={isInteracting}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem',
+                      background: 'var(--accent-red)',
+                      color: 'white',
+                      borderRadius: 'var(--radius-md)',
+                      fontWeight: 600,
+                      fontSize: '0.85rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem',
+                      opacity: isInteracting ? 0.6 : 1,
+                      cursor: isInteracting ? 'not-allowed' : 'pointer',
+                      transition: 'background 0.2s ease',
+                    }}
+                  >
+                    <Sparkles size={14} />
+                    <span>{pendingPresetId === preset.id ? 'Đang áp dụng...' : 'Chọn và tùy biến bộ này'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. Verified Cultural Knowledge Cards */}
+      <section>
+        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+              <BookOpen size={20} className="text-accent-red" />
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', color: 'var(--text-primary)' }}>
+                Tư liệu văn hóa & Nguồn kiểm chứng
+              </h3>
+            </div>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Các cứ liệu lịch sử, ấn phẩm, số trang và hiện vật bảo tàng được đối soát độc lập
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--bg-subtle)', padding: '0.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)' }}>
+            <button
+              onClick={() => setCultureFilter('published')}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                background: cultureFilter === 'published' ? 'white' : 'transparent',
+                color: cultureFilter === 'published' ? 'var(--accent-red)' : 'var(--text-muted)',
+                boxShadow: cultureFilter === 'published' ? 'var(--shadow-sm)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Đã kiểm chứng ({cultureCards.filter((c) => c.status === 'published').length})
+            </button>
+            <button
+              onClick={() => setCultureFilter('all')}
+              style={{
+                padding: '0.4rem 0.8rem',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                background: cultureFilter === 'all' ? 'white' : 'transparent',
+                color: cultureFilter === 'all' ? 'var(--accent-red)' : 'var(--text-muted)',
+                boxShadow: cultureFilter === 'all' ? 'var(--shadow-sm)' : 'none',
+                border: 'none',
+                cursor: 'pointer',
+              }}
+            >
+              Tất cả tư liệu ({cultureCards.length})
+            </button>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          {displayedCards.map((card) => (
+            <div
+              key={card.id}
+              style={{
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '1.5rem',
+                border: '1px solid var(--border-light)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                boxShadow: 'var(--shadow-sm)',
+              }}
+            >
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <span
+                    style={{
+                      background: card.status === 'published' ? '#E8F5E9' : '#FFF3E0',
+                      color: card.status === 'published' ? '#2E7D32' : '#E65100',
+                      fontSize: '0.72rem',
+                      fontWeight: 600,
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: 'var(--radius-full)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.3rem',
+                    }}
+                  >
+                    {card.status === 'published' ? (
+                      <>
+                        <CheckCircle2 size={12} />
+                        <span>Đã kiểm chứng</span>
+                      </>
+                    ) : (
+                      <span>Cần xác minh thêm</span>
+                    )}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                    Chủ đề: {card.category}
+                  </span>
+                </div>
+
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.15rem', color: 'var(--text-primary)', marginBottom: '0.65rem' }}>
+                  {card.title}
+                </h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55, marginBottom: '1rem' }}>
+                  {card.content}
+                </p>
+              </div>
+
+              <div
+                style={{
+                  borderTop: '1px solid var(--border-light)',
+                  paddingTop: '0.75rem',
+                  fontSize: '0.78rem',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <div><strong>Nguồn:</strong> {card.sourceName} ({card.sourceAuthor})</div>
+                <div><strong>Dẫn chứng:</strong> {card.sourceEvidence}</div>
+                {card.sourceUrl && (
+                  <a
+                    href={card.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      color: 'var(--accent-blue)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      marginTop: '0.25rem',
+                    }}
+                  >
+                    <span>Xem tư liệu bảo tàng</span>
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
